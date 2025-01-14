@@ -402,7 +402,6 @@ void pruebasSupervisor() {
 
 int main() {
     pruebas();
-    cout << "MI PARTE" << endl;
     pruebasSupervisor();
     return 0;
 }
