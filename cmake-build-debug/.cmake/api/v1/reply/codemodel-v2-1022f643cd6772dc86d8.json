@@ -49,8 +49,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "C:/Users/mateo/Documents/Clases/PEL/TGPEL-Final/cmake-build-debug",
-		"source" : "C:/Users/mateo/Documents/Clases/PEL/TGPEL-Final"
+		"build" : "R:/Repositorios/TGPEL-Final/cmake-build-debug",
+		"source" : "R:/Repositorios/TGPEL-Final"
 	},
 	"version" : 
 	{

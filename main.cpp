@@ -96,7 +96,7 @@ public:
     }
 
     // Validar credenciales de un usuario
-    bool validarCredenciales(const string& usuario, const string& contrasena, const string& telefono = "", const string& contrasenaAleatoria = "") {
+    bool validarCredenciales(const string& usuario, const string& contrasena = "", const string& telefono = "", const string& contrasenaAleatoria = "") {
         NodoAcceso* nodo = buscarPorNombre(usuario);
         if (!nodo) {
             cout << "Error: Usuario no registrado." << endl;
@@ -171,6 +171,66 @@ string generarContrasenaDiaria() {
     return contrasena;
 }
 
+void menuUsuario() {
+    cout << "\n=== Menú del Usuario ===\n";
+    cout << "Aquí se mostrarán las opciones para usuarios generales.\n";
+}
+
+void menuSupervisor() {
+    cout << "\n=== Menú del Supervisor ===\n";
+    cout << "Aquí se mostrarán las opciones para supervisores.\n";
+}
+
+void menuAnalista() {
+    cout << "\n=== Menú del Analista ===\n";
+    cout << "Aquí se mostrarán las opciones para analistas.\n";
+}
+
+void iniciarSesion(ListaEnlazadaAccesos& accesos) {
+    string usuario, contrasena, telefono, contrasenaAleatoria;
+    cout << "\n*** Bienvenido al sistema de login ***\n";
+    cout << "Contraseña diaria: " << generarContrasenaDiaria() << endl;
+
+    cout << "Ingrese su nombre de usuario: ";
+    cin >> usuario;
+
+    NodoAcceso* nodo = accesos.buscarPorNombre(usuario);
+    if (!nodo) {
+        cout << "Error: Usuario no encontrado." << endl;
+        return;
+    }
+
+    if (nodo->perfil == 1) {
+        cout << "Login exitoso. Bienvenido, " << nodo->nombreUsuario << "!\n";
+        menuUsuario();
+    } else if (nodo->perfil == 2) {
+        cout << "Ingrese su contraseña: ";
+        cin >> contrasena;
+        if (nodo->contrasena == contrasena) {
+            cout << "Login exitoso. Bienvenido, " << nodo->nombreUsuario << "!\n";
+            menuSupervisor();
+        } else {
+            cout << "Error: Contraseña incorrecta." << endl;
+        }
+    } else if (nodo->perfil == 3) {
+        cout << "Ingrese su contraseña: ";
+        cin >> contrasena;
+        cout << "Ingrese su teléfono: ";
+        cin >> telefono;
+        cout << "Ingrese la contraseña diaria: ";
+        cin >> contrasenaAleatoria;
+
+        if (nodo->contrasena == contrasena && nodo->telefono == telefono && contrasenaAleatoria == generarContrasenaDiaria()) {
+            cout << "Login exitoso. Bienvenido, " << nodo->nombreUsuario << "!\n";
+            menuAnalista();
+        } else {
+            cout << "Error: Credenciales incorrectas." << endl;
+        }
+    } else {
+        cout << "Error: Perfil no reconocido." << endl;
+    }
+}
+
 // Pruebas del sistema de login y control de seguridad
 void pruebas() {
     unique_ptr<ListaEnlazadaAccesos> accesos = make_unique<ListaEnlazadaAccesos>();
@@ -181,7 +241,7 @@ void pruebas() {
     time_t haceUnaHora = ahora - 3600;
     time_t haceDosHoras = ahora - 7200;
 
-    accesos->insertar("juan", ahora, 1, "password1");
+    accesos->insertar("juan", ahora, 1);
     accesos->insertar("ana", haceUnaHora, 2, "password2");
     accesos->insertar("carlos", haceDosHoras, 3, "password3", "987654321");
 
@@ -211,12 +271,12 @@ void pruebas() {
     string contrasenaDiaria = generarContrasenaDiaria();
     cout << "Contraseña diaria generada: " << contrasenaDiaria << endl;
 
-    accesos->validarCredenciales("juan", "password1");
+    accesos->validarCredenciales("juan");
     accesos->validarCredenciales("ana", "password2");
     accesos->validarCredenciales("carlos", "password3", "987654321", contrasenaDiaria);
+
+    iniciarSesion(*accesos);
 }
-
-
 
 class NodoCola {
 public:

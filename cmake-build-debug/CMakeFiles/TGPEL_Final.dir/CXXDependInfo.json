@@ -1,0 +1,18 @@
+{
+	"bmi-installation" : null,
+	"compiler-frontend-variant" : "GNU",
+	"compiler-id" : "GNU",
+	"compiler-simulate-id" : "",
+	"config" : "Debug",
+	"cxx-modules" : {},
+	"dir-cur-bld" : "R:/Repositorios/TGPEL-Final/cmake-build-debug",
+	"dir-cur-src" : "R:/Repositorios/TGPEL-Final",
+	"dir-top-bld" : "R:/Repositorios/TGPEL-Final/cmake-build-debug",
+	"dir-top-src" : "R:/Repositorios/TGPEL-Final",
+	"exports" : [],
+	"forward-modules-from-target-dirs" : [],
+	"include-dirs" : [],
+	"language" : "CXX",
+	"linked-target-dirs" : [],
+	"module-dir" : "R:/Repositorios/TGPEL-Final/cmake-build-debug/CMakeFiles/TGPEL_Final.dir"
+}
