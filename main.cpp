@@ -13,6 +13,7 @@ string toLowerCase(const string& str) {
     }
     return lowerStr;
 }
+
 // Declaración del prototipo de la función
 string generarContrasenaDiaria();
 
@@ -58,7 +59,6 @@ private:
         }
         return buscarRecursivo(actual->siguiente, usuario, hora, buscarPorUsuario);
     }
-
 
     // Función recursiva para mostrar la lista
     void mostrarRecursivo(NodoAcceso* actual) {
@@ -171,6 +171,8 @@ string generarContrasenaDiaria() {
     }
     return contrasena;
 }
+
+// NodoCola para actividades
 class NodoCola {
 public:
     string usuario;  // Usuario al que pertenece la actividad
@@ -182,6 +184,7 @@ public:
         : usuario(user), actividad(act), hora(t), siguiente(nullptr) {}
 };
 
+// ColaActividades para gestión de actividades
 class ColaActividades {
 private:
     NodoCola* frente;
@@ -220,7 +223,7 @@ public:
         }
     }
 
-    // Eliminar la actividad más antigua
+    // Eliminar actividad más antigua
     void dequeue() {
         if (!frente) {
             cout << "No hay actividades para eliminar." << endl;
@@ -233,25 +236,89 @@ public:
     }
 
     // Mostrar todas las actividades
-    void mostrar() {
-        if (!frente) {
+    void mostrar(const string& usuario) {
+        if (!frente) { // Verifica si la cola está vacía
             cout << "No hay actividades en la cola." << endl;
             return;
         }
-        mostrarRecursivo(frente);
+
+        NodoCola* actual = frente; // Puntero para recorrer la cola
+        bool hayActividades = false; // Bandera para verificar si hay actividades para el usuario
+
+        cout << "Actividades asignadas para " << usuario << ":" << endl;
+        while (actual) { // Recorre la cola nodo por nodo
+            if (actual->usuario == usuario) { // Filtra actividades por usuario
+                cout << "- Actividad: " << actual->actividad
+                     << ", Hora: " << ctime(&(actual->hora)) << endl;
+                hayActividades = true;
+            }
+            actual = actual->siguiente;
+        }
+
+        // Si no se encontraron actividades, muestra un mensaje informativo
+        if (!hayActividades) {
+            cout << "No hay actividades asignadas para " << usuario << "." << endl;
+        }
     }
+
+
+
+    // En la clase ColaActividades, agregar esta función
+    bool tieneActividades(const string& usuario) {
+        NodoCola* actual = frente;
+        while (actual) {
+            if (actual->usuario == usuario) {
+                return true; // Encontró una actividad para el usuario
+            }
+            actual = actual->siguiente;
+        }
+        return false; // No encontró actividades para el usuario
+    }
+
 };
+// Declaración global de colaGeneral
+ColaActividades colaGeneral;
+
+// Función para asignar actividad automáticamente
+void asignarActividadAutomaticamente(ListaEnlazadaAccesos& accesos, ColaActividades& colaGeneral, const string& usuario) {
+    NodoAcceso* nodo = accesos.buscarPorNombre(usuario);
+    if (!nodo) {
+        cout << "Error: Usuario no encontrado para asignar actividad." << endl;
+        return;
+    }
+
+    string actividades[] = {
+        "Actualizar datos personales.",
+        "Configurar autenticacion en dos pasos.",
+        "Revisar historial de accesos.",
+        "Aceptar terminos y condiciones."
+    };
+
+    if (colaGeneral.tieneActividades(usuario)) {
+        cout << "El usuario " << usuario << " ya tiene actividades pendientes." << endl;
+        return;
+    }
+
+    int actividadIndex = rand() % 4;
+    string actividadSeleccionada = actividades[actividadIndex];
+
+    colaGeneral.enqueue(usuario, actividadSeleccionada);
+    cout << "Actividad asignada automaticamente a " << usuario << ": " << actividadSeleccionada << endl;
+}
+
+
+
 
 void menuUsuario() {
     cout << "\n=== Menú del Usuario ===\n";
     cout << "Aquí se mostrarán las opciones para usuarios generales.\n";
 }
 
+// Menú del analista
 void menuAnalista() {
-    cout << "\n=== Menú del Analista ===\n";
-    cout << "Aquí se mostrarán las opciones para analistas.\n";
+    cout << "\n=== Menú del Analista ===" << endl;
+    cout << "Opciones específicas para el analista aún no implementadas." << endl;
 }
-
 void asignarActividad(unique_ptr<ColaActividades>& cola, const string& usuario, const string& actividad, int perfilUsuario) {
     if (perfilUsuario != 1 && perfilUsuario != 2) { // Permitir nivel 1 y nivel 2
         cout << "Error: No tienes permiso para asignar actividades a este perfil." << endl;
@@ -270,15 +337,17 @@ void revisarActividades(unique_ptr<ColaActividades>& cola, const string& usuario
     }
 
     cout << "Actividades de " << usuario << ":" << endl;
-    cola->mostrar();
+    cola->mostrar(usuario);
+
 }
 
 
-void gestionarActividadesPropias(unique_ptr<ColaActividades>& cola) {
+void gestionarActividadesPropias(ColaActividades* cola, const string& usuario) {
     cout << "Tus actividades asignadas:" << endl;
-    cola->mostrar();
+    cola->mostrar(usuario); // Aquí pasamos el usuario como argumento
 }
 
+// Menú del supervisor
 void menuSupervisor(ListaEnlazadaAccesos& accesos, ColaActividades* colaGeneral, ColaActividades* colaSupervisor, const string& supervisor) {
     int opcion;
 
@@ -292,111 +361,120 @@ void menuSupervisor(ListaEnlazadaAccesos& accesos, ColaActividades* colaGeneral,
         cin >> opcion;
 
         switch (opcion) {
-        case 1: {
-            string usuario, actividad;
-            cout << "Introduce el nombre del usuario: ";
-            cin.ignore(); // Limpiar el buffer
-            getline(cin, usuario);
-            cout << "Introduce la actividad a asignar: ";
-            getline(cin, actividad);
+            case 1: {
+                string usuario, actividad;
+                cout << "Introduce el nombre del usuario: ";
+                cin.ignore();
+                getline(cin, usuario);
+                cout << "Introduce la actividad a asignar: ";
+                getline(cin, actividad);
 
-            NodoAcceso* nodoUsuario = accesos.buscarPorNombre(usuario);
-            if (!nodoUsuario) {
-                cout << "Error: Usuario no encontrado." << endl;
-            } else if (nodoUsuario->perfil != 1) {
-                cout << "Error: Solo puedes asignar actividades a usuarios generales." << endl;
-            } else {
-                colaGeneral->enqueue(usuario, actividad);
-                cout << "Actividad asignada a " << usuario << ": " << actividad << endl;
+                NodoAcceso* nodoUsuario = accesos.buscarPorNombre(usuario);
+                if (!nodoUsuario) {
+                    cout << "Error: Usuario no encontrado." << endl;
+                } else if (nodoUsuario->perfil != 1) {
+                    cout << "Error: Solo puedes asignar actividades a usuarios generales." << endl;
+                } else {
+                    if (colaGeneral->tieneActividades(usuario)) {
+                        cout << "El usuario " << usuario << " ya tiene actividades pendientes. No se asignarán nuevas." << endl;
+                    } else {
+                        colaGeneral->enqueue(usuario, actividad);
+                        cout << "Actividad asignada a " << usuario << ": " << actividad << endl;
+                    }
+                }
+                break;
             }
-            break;
-        }
-        case 2: {
-            string usuario;
-            cout << "Introduce el nombre del usuario a revisar: ";
-            cin.ignore(); // Limpiar el buffer
-            getline(cin, usuario);
+            case 2: {
+                string usuario;
+                cout << "Introduce el nombre del usuario a revisar: ";
+                cin.ignore();
+                getline(cin, usuario);
 
-            NodoAcceso* nodoUsuario = accesos.buscarPorNombre(usuario);
-            if (!nodoUsuario) {
-                cout << "Error: Usuario no encontrado." << endl;
-            } else if (nodoUsuario->perfil != 1) {
-                cout << "Error: Solo puedes revisar actividades de usuarios generales." << endl;
-            } else {
-                cout << "Actividades de " << usuario << ":" << endl;
-                colaGeneral->mostrar();
+                colaGeneral->mostrar(usuario);
+                break;
             }
-            break;
-        }
-        case 3: {
-            cout << "Tus actividades asignadas:" << endl;
-            colaSupervisor->mostrar();
-            break;
-        }
-        case 4:
-            cout << "Saliendo del sistema..." << endl;
-            break;
-        default:
-            cout << "Opción no válida. Inténtalo de nuevo." << endl;
+            case 3: {
+                colaSupervisor->mostrar(supervisor);
+                break;
+            }
+            case 4:
+                cout << "Saliendo del sistema..." << endl;
+                break;
+            default:
+                cout << "Opción no válida. Inténtalo de nuevo." << endl;
         }
     } while (opcion != 4);
 }
-
-void iniciarSesion(ListaEnlazadaAccesos& accesos) {
+// Función para iniciar sesión y asignar actividad
+void iniciarSesion(ListaEnlazadaAccesos& accesos, ColaActividades& colaGeneral) {
     string usuario, contrasena, telefono, contrasenaAleatoria;
+
     cout << "\n*** Bienvenido al sistema de login ***\n";
     cout << "Contrasenia diaria: " << generarContrasenaDiaria() << endl;
 
+    // Solicitar el nombre de usuario
     cout << "Ingrese su nombre de usuario: ";
     cin >> usuario;
 
+    // Buscar el nodo del usuario
     NodoAcceso* nodo = accesos.buscarPorNombre(usuario);
     if (!nodo) {
         cout << "Error: Usuario no encontrado." << endl;
         return;
     }
 
+    // Lógica para perfil general (perfil == 1)
     if (nodo->perfil == 1) {
         cout << "Login exitoso. Bienvenido, " << nodo->nombreUsuario << "!\n";
-        menuUsuario();
-    } else if (nodo->perfil == 2) {
-        cout << "Ingrese su ni: ";
+
+        // Asignar actividad automáticamente al usuario
+        asignarActividadAutomaticamente(accesos, colaGeneral, usuario);
+
+        // Mostrar actividades asignadas al usuario
+        cout << "\nActividades asignadas a " << usuario << ":\n";
+        colaGeneral.mostrar(usuario);
+    }
+    // Lógica para perfil supervisor (perfil == 2)
+    else if (nodo->perfil == 2) {
+        cout << "Ingrese su contrasenia: ";
         cin >> contrasena;
+
         if (nodo->contrasena == contrasena) {
             cout << "Login exitoso. Bienvenido, " << nodo->nombreUsuario << "!\n";
 
-            // Crear las colas dinámicamente
-            ColaActividades* colaGeneral = new ColaActividades();
-            ColaActividades* colaSupervisor = new ColaActividades();
+            // Crear una cola local para el supervisor
+            ColaActividades colaSupervisor;
 
-            // Llamar al menú del Supervisor
-            menuSupervisor(accesos, colaGeneral, colaSupervisor, nodo->nombreUsuario);
-
-            // Liberar la memoria de las colas
-            delete colaGeneral;
-            delete colaSupervisor;
+            // Llamar al menú del supervisor
+            menuSupervisor(accesos, &colaGeneral, &colaSupervisor, nodo->nombreUsuario);
         } else {
             cout << "Error: Contrasenia incorrecta." << endl;
         }
-    } else if (nodo->perfil == 3) {
+    }
+    // Lógica para perfil analista (perfil == 3)
+    else if (nodo->perfil == 3) {
         cout << "Ingrese su contrasenia: ";
         cin >> contrasena;
-        cout << "Ingrese su teléfono: ";
+        cout << "Ingrese su telefono: ";
         cin >> telefono;
         cout << "Ingrese la contrasenia diaria: ";
         cin >> contrasenaAleatoria;
 
-        if (nodo->contrasena == contrasena && nodo->telefono == telefono && contrasenaAleatoria == generarContrasenaDiaria()) {
+        if (nodo->contrasena == contrasena && nodo->telefono == telefono &&
+            contrasenaAleatoria == generarContrasenaDiaria()) {
             cout << "Login exitoso. Bienvenido, " << nodo->nombreUsuario << "!\n";
+
+            // Llamar al menú del analista
             menuAnalista();
         } else {
             cout << "Error: Credenciales incorrectas." << endl;
         }
-    } else {
+    }
+    // Caso para perfiles no reconocidos
+    else {
         cout << "Error: Perfil no reconocido." << endl;
     }
 }
-
 // Pruebas del sistema de login y control de seguridad
 void pruebas() {
     unique_ptr<ListaEnlazadaAccesos> accesos = make_unique<ListaEnlazadaAccesos>();
@@ -441,11 +519,14 @@ void pruebas() {
     accesos->validarCredenciales("ana", "password2");
     accesos->validarCredenciales("carlos", "password3", "987654321", contrasenaDiaria);
 
-    iniciarSesion(*accesos);
+    iniciarSesion(*accesos, colaGeneral);
+
 }
 
-
 int main() {
+    ColaActividades colaGeneral;
+    srand(time(0)); // Inicializa el generador de números aleatorios
     pruebas();
     return 0;
 }
+
