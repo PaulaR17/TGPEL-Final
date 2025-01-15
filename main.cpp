@@ -279,9 +279,6 @@ public:
             cout << "No hay actividades asignadas para " << usuario << "." << endl;
         }
     }
-
-
-
     // verifica si un usuario tiene actividades asignadas
     bool tieneActividades(const string& usuario) {
         NodoCola* actual = frente;
@@ -449,7 +446,7 @@ void generarEstadisticasAccesos(ListaEnlazadaAccesos& accesos) {
     archivo.close(); // cierra el archivo
 }
 
-// -----ACTIVIDADES-----
+// -----ACTIVIDADES SOSPECHOSAS-----
 // función recursiva para detectar actividades sospechosas
 void detectarSospechosasRecursivo(NodoCola* actual, map<string, map<string, int>>& patrones, time_t intervalo = 600) {
     if (!actual) return; // caso base: si la cola está vacía o ya no hay más nodos, termina la recursión
@@ -581,14 +578,6 @@ void iniciarSesion(ListaEnlazadaAccesos& accesos, ColaActividades& colaGeneral) 
     }
 }
 
-#include <iostream>
-#include <string>
-#include <ctime>
-#include <cstdlib>
-#include <memory>
-#include <map>
-#include <fstream>
-using namespace std;
 
 // -----PRUEBAS DEL SISTEMA-----
 // pruebas del sistema de login y control de seguridad
