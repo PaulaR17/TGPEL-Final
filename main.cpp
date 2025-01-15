@@ -3,6 +3,8 @@
 #include <ctime>
 #include <cstdlib>
 #include <memory>
+#include <map>
+#include <fstream>
 using namespace std;
 
 
@@ -79,6 +81,10 @@ public:
             delete temp;
         }
     }
+    // Getter para acceder a la cabeza de la lista
+    NodoAcceso* getCabeza() const {
+        return cabeza;
+    }
 
     // Insertar un nuevo nodo
     void insertar(const string& nombre, time_t hora, int perfil, const string& pass = "", const string& phone = "") {
@@ -95,6 +101,7 @@ public:
     NodoAcceso* buscarPorHora(time_t hora) {
         return buscarRecursivo(cabeza, "", hora, false);
     }
+
 
     // Validar credenciales de un usuario
     bool validarCredenciales(const string& usuario, const string& contrasena = "", const string& telefono = "", const string& contrasenaAleatoria = "") {
@@ -210,8 +217,14 @@ public:
         }
     }
 
+    // Getter para acceder al frente de la cola
+    NodoCola* getFrente() const {
+        return frente;
+    }
+
+
     // Agregar actividad
-    void enqueue(const string& usuario, const string& actividad) {
+ void enqueue(const string& usuario, const string& actividad) {
         time_t ahora = time(0);
         NodoCola* nuevo = new NodoCola(usuario, actividad, ahora);
 
@@ -315,10 +328,7 @@ void menuUsuario() {
 }
 
 // Menú del analista
-void menuAnalista() {
-    cout << "\n=== Menú del Analista ===" << endl;
-    cout << "Opciones específicas para el analista aún no implementadas." << endl;
-}
+
 void asignarActividad(unique_ptr<ColaActividades>& cola, const string& usuario, const string& actividad, int perfilUsuario) {
     if (perfilUsuario != 1 && perfilUsuario != 2) { // Permitir nivel 1 y nivel 2
         cout << "Error: No tienes permiso para asignar actividades a este perfil." << endl;
@@ -405,6 +415,93 @@ void menuSupervisor(ListaEnlazadaAccesos& accesos, ColaActividades* colaGeneral,
         }
     } while (opcion != 4);
 }
+
+//-------ANALISTA-----
+// Función recursiva para contar accesos
+void contarAccesosRecursivo(NodoAcceso* actual, map<string, int>& conteos) {
+    if (!actual) return; // Caso base: lista vacía o fin de la lista
+
+    conteos[actual->nombreUsuario]++;
+    contarAccesosRecursivo(actual->siguiente, conteos);
+}
+
+// Generar estadísticas de accesos
+void generarEstadisticasAccesos(ListaEnlazadaAccesos& accesos) {
+    map<string, int> conteos;
+    contarAccesosRecursivo(accesos.getCabeza(), conteos);
+
+    cout << "Estadísticas de accesos:\n";
+    for (const auto& par : conteos) {
+        cout << par.first << ": " << par.second << " accesos\n";
+    }
+
+    // Guardar en archivo
+    ofstream archivo("informe_accesos.txt");
+    archivo << "Informe de Accesos:\n";
+    archivo << "Total de accesos: " << conteos.size() << "\n";
+    for (const auto& par : conteos) {
+        archivo << par.first << ": " << par.second << " accesos\n";
+    }
+    archivo.close();
+}
+
+// Función recursiva para detectar actividades sospechosas
+void detectarSospechosasRecursivo(NodoCola* actual, map<string, map<string, int>>& patrones, time_t intervalo = 600) {
+    if (!actual) return; // Caso base: cola vacía o fin de la cola
+
+    patrones[actual->usuario][actual->actividad]++;
+    detectarSospechosasRecursivo(actual->siguiente, patrones);
+}
+
+// Generar informe de actividades sospechosas
+void generarInformeSospechosas(ColaActividades& cola) {
+    map<string, map<string, int>> patrones;
+    detectarSospechosasRecursivo(cola.getFrente(), patrones);
+
+    cout << "Informe de actividades sospechosas:\n";
+    ofstream archivo("informe_sospechosas.txt");
+    archivo << "Informe de Actividades Sospechosas:\n";
+
+    for (const auto& usuario : patrones) {
+        for (const auto& actividad : usuario.second) {
+            if (actividad.second > 2) { // Actividad sospechosa
+                cout << "Usuario: " << usuario.first << ", Actividad: " << actividad.first
+                     << ", Repeticiones: " << actividad.second << "\n";
+                archivo << "Usuario: " << usuario.first << ", Actividad: " << actividad.first
+                        << ", Repeticiones: " << actividad.second << "\n";
+            }
+        }
+    }
+    archivo.close();
+}
+
+// Menú del Analista
+void menuAnalista(ListaEnlazadaAccesos& accesos, ColaActividades& cola) {
+    int opcion;
+    do {
+        cout << "\n=== Menú del Analista ===\n";
+        cout << "1. Generar estadísticas de accesos\n";
+        cout << "2. Detectar actividades sospechosas\n";
+        cout << "3. Salir\n";
+        cout << "Selecciona una opción: ";
+        cin >> opcion;
+
+        switch (opcion) {
+            case 1:
+                generarEstadisticasAccesos(accesos);
+            break;
+            case 2:
+                generarInformeSospechosas(cola);
+            break;
+            case 3:
+                cout << "Saliendo del menú del analista...\n";
+            break;
+            default:
+                cout << "Opción no válida. Inténtalo de nuevo.\n";
+        }
+    } while (opcion != 3);
+}
+
 // Función para iniciar sesión y asignar actividad
 void iniciarSesion(ListaEnlazadaAccesos& accesos, ColaActividades& colaGeneral) {
     string usuario, contrasena, telefono, contrasenaAleatoria;
@@ -465,7 +562,9 @@ void iniciarSesion(ListaEnlazadaAccesos& accesos, ColaActividades& colaGeneral) 
             cout << "Login exitoso. Bienvenido, " << nodo->nombreUsuario << "!\n";
 
             // Llamar al menú del analista
-            menuAnalista();
+            menuAnalista(accesos, colaGeneral);
+
+
         } else {
             cout << "Error: Credenciales incorrectas." << endl;
         }
@@ -522,6 +621,8 @@ void pruebas() {
     iniciarSesion(*accesos, colaGeneral);
 
 }
+
+
 
 int main() {
     ColaActividades colaGeneral;
