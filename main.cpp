@@ -230,15 +230,14 @@ public:
 
 
     // agrega una actividad a la cola
- void enqueue(const string& usuario, const string& actividad) {
-        time_t ahora = time(0); // obtiene la hora actual
-        NodoCola* nuevo = new NodoCola(usuario, actividad, ahora); // crea un nuevo nodo
-
-        if (!final) { // si la cola esta vacia
-            frente = final = nuevo; // el nuevo nodo es el primero y el ultimo
+    void enqueue(const string& usuario, const string& actividad) {
+        time_t ahora = time(0);
+        NodoCola* nuevo = new NodoCola(toLowerCase(usuario), actividad, ahora); // Normalizamos el nombre
+        if (!final) {
+            frente = final = nuevo;
         } else {
-            final->siguiente = nuevo; // enlaza el nuevo nodo al final
-            final = nuevo; // actualiza el puntero al ultimo nodo
+            final->siguiente = nuevo;
+            final = nuevo;
         }
     }
 
@@ -256,29 +255,32 @@ public:
 
     // muestra las actividades asignadas a un usuario
     void mostrar(const string& usuario) {
-        if (!frente) { // si la cola esta vacia
-            cout << "No hay actividades en la cola." << endl; // mensaje de error
+        if (!frente) {
+            cout << "No hay actividades en la cola general." << endl;
             return;
         }
 
-        NodoCola* actual = frente; // puntero para recorrer la cola
-        bool hayActividades = false; // bandera para verificar si hay actividades para el usuario
+        NodoCola* actual = frente;
+        bool hayActividades = false;
 
-        cout << "Actividades asignadas para " << usuario << ":" << endl; // encabezado
-        while (actual) { // recorre la cola nodo por nodo
-            if (actual->usuario == usuario) { // filtra actividades por usuario
+        cout << "Recorriendo la cola para verificar actividades asignadas..." << endl;
+        while (actual) {
+            cout << "Verificando actividad: Usuario: " << actual->usuario
+                 << ", Actividad: " << actual->actividad << endl;
+
+            if (toLowerCase(actual->usuario) == toLowerCase(usuario)) {
                 cout << "- Actividad: " << actual->actividad
-                     << ", Hora: " << ctime(&(actual->hora)) << endl; // muestra los detalles de la actividad
-                hayActividades = true; // marca que hay actividades
+                     << ", Hora: " << ctime(&(actual->hora)) << endl;
+                hayActividades = true;
             }
-            actual = actual->siguiente; // pasa al siguiente nodo
+            actual = actual->siguiente;
         }
 
-        // si no se encontraron actividades, muestra un mensaje informativo
         if (!hayActividades) {
             cout << "No hay actividades asignadas para " << usuario << "." << endl;
         }
     }
+
     // verifica si un usuario tiene actividades asignadas
     bool tieneActividades(const string& usuario) {
         NodoCola* actual = frente;
@@ -293,7 +295,7 @@ public:
 };
 
 // Declaración global de colaGeneral
-ColaActividades colaGeneral; // cola general para todas las actividades
+ColaActividades colaGeneral;
 
 // funcion para asignar actividad automaticamente
 void asignarActividadAutomaticamente(ListaEnlazadaAccesos& accesos, ColaActividades& colaGeneral, const string& usuario) {
@@ -624,15 +626,33 @@ void pruebas() {
     accesos->validarCredenciales("ana", "password2"); // valida las credenciales del supervisor "ana"
     accesos->validarCredenciales("carlos", "password3", "987654321", contrasenaDiaria); // valida las credenciales del analista "carlos"
 
-    iniciarSesion(*accesos, colaGeneral); // inicia sesion y realiza las operaciones necesarias segun el perfil del usuario
+
+    int opcion;
+    do {
+        cout << "\n=== Sistema de Login ===" << endl;
+        cout << "1. Iniciar sesion" << endl;
+        cout << "2. Salir" << endl;
+        cout << "Selecciona una opcion: ";
+        cin >> opcion;
+
+        switch (opcion) {
+            case 1:
+                iniciarSesion(*accesos, colaGeneral); // llama a la función para iniciar sesión
+            break;
+            case 2:
+                cout << "Saliendo del sistema..." << endl;
+            break;
+            default:
+                cout << "Opcion no valida. Intentalo de nuevo." << endl;
+            break;
+        }
+    } while (opcion != 2); // el menú sigue mostrando opciones hasta que se elige salir
 }
 
 // -----FUNCION PRINCIPAL-----
 // funcion principal del programa
 int main() {
-    ColaActividades colaGeneral; // crea una cola de actividades global
     srand(time(0)); // inicializa el generador de numeros aleatorios con la hora actual
     pruebas(); // ejecuta las pruebas del sistema
     return 0; // finaliza la ejecucion del programa
 }
-

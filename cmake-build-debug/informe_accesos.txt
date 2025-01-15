@@ -1,5 +1,0 @@
-Informe de Accesos:
-Total de accesos: 3
-ana: 1 accesos
-carlos: 1 accesos
-juan: 1 accesos
